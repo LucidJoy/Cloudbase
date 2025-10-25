@@ -1,12 +1,17 @@
 import { inngest } from "@/innjest/client";
-import { protectedProcedure, createTRPCRouter, baseProcedure } from "../init";
+import {
+  protectedProcedure,
+  createTRPCRouter,
+  baseProcedure,
+  premiumProcedure,
+} from "../init";
 import prisma from "@/lib/database";
 import { google } from "@ai-sdk/google";
 import { generateText } from "ai";
 import { TRPCError } from "@trpc/server";
 
 export const appRouter = createTRPCRouter({
-  testAi: baseProcedure.mutation(async () => {
+  testAi: premiumProcedure.mutation(async () => {
     // throw new TRPCError({
     //   code: "BAD_REQUEST",
     //   message: "Something went wrong",
