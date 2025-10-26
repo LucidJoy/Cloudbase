@@ -3,6 +3,7 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import prisma from "./database";
 import { polarClient } from "./polar";
+import { multiSession } from "better-auth/plugins";
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
@@ -30,5 +31,6 @@ export const auth = betterAuth({
         portal(),
       ],
     }),
+    multiSession(),
   ],
 });
