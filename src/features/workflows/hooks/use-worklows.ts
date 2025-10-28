@@ -1,3 +1,4 @@
+import { useWorkflowParams } from "@/hooks/use-workflows-params";
 import { useTRPC } from "@/trpc/client";
 import {
   useMutation,
@@ -10,8 +11,9 @@ import { toast } from "sonner";
 // hook to fetch all workflows using suspense
 export const useSuspenseWorkflows = () => {
   const trpc = useTRPC();
+  const [params] = useWorkflowParams();
 
-  return useSuspenseQuery(trpc.workflows.getMany.queryOptions());
+  return useSuspenseQuery(trpc.workflows.getMany.queryOptions(params));
 };
 
 // hook to create new workflow
