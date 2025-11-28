@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { ErrorView, LoadingView } from "@/components/entity-components";
 import { useSuspenseWorkflow } from "@/features/workflows/hooks/use-worklows";
 import {
@@ -24,6 +24,8 @@ import { nodeComponents } from "@/config/node-components";
 import { AddNodeButton } from "./add-node-btn";
 import { useSetAtom } from "jotai";
 import { editorAtom } from "../store/atoms";
+import { NodeType } from "@/generated/prisma";
+import { ExecuteWorkflowButton } from "./execute-workflow-btn";
 
 const initialNodes = [
   { id: "n1", position: { x: 0, y: 0 }, data: { label: "Node 1" } },
@@ -63,6 +65,10 @@ export const Editor = ({ workflowId }: { workflowId: string }) => {
     []
   );
 
+  const hasManualTrigger = useMemo(() => {
+    return nodes.map((node) => node.type === NodeType.MANUAL_TRIGGER);
+  }, [nodes]);
+
   // return <p>{JSON.stringify(workflow, null, 2)}</p>;
   return (
     <div className="size-full">
@@ -90,6 +96,11 @@ export const Editor = ({ workflowId }: { workflowId: string }) => {
         <Panel position="top-right">
           <AddNodeButton />
         </Panel>
+        {hasManualTrigger && (
+          <Panel position="bottom-center">
+            <ExecuteWorkflowButton workflowId={workflowId} />
+          </Panel>
+        )}
       </ReactFlow>
     </div>
   );
