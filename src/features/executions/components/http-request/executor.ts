@@ -1,4 +1,5 @@
 import type { NodeExecutor } from "@/features/executions/types";
+import { httpRequestChannel } from "@/innjest/channels/http-request";
 import { NonRetriableError } from "inngest";
 import ky, { type Options as KyOptions } from "ky";
 
@@ -14,61 +15,108 @@ export const httpRequestExecutor: NodeExecutor<HttpRequestData> = async ({
   nodeId,
   context,
   step,
+  publish,
 }) => {
   // publish loading state for http-request
+  await publish(
+    httpRequestChannel().status({
+      nodeId,
+      status: "loading",
+    })
+  );
 
   if (!data.endpoint) {
     // publish "error" state
+    await publish(
+      httpRequestChannel().status({
+        nodeId,
+        status: "error",
+      })
+    );
     throw new NonRetriableError("HTTP Request node: No endpoint configured");
   }
 
   if (!data.variableName) {
     // publish "error" state
-    throw new NonRetriableError("Variable name not configured");
+    await publish(
+      httpRequestChannel().status({
+        nodeId,
+        status: "error",
+      })
+    );
+    throw new NonRetriableError(
+      "HTTP Request node: Variable name not configured"
+    );
   }
 
-  const result = await step.run("http-request", async () => {
-    const endpoint = data.endpoint!;
-    const method = data.method || "GET";
+  if (!data.method) {
+    // publish "error" state
+    await publish(
+      httpRequestChannel().status({
+        nodeId,
+        status: "error",
+      })
+    );
+    throw new NonRetriableError("HTTP Request node: Method not configured");
+  }
+  try {
+    const result = await step.run("http-request", async () => {
+      const endpoint = data.endpoint!;
+      const method = data.method || "GET";
 
-    const options: KyOptions = { method };
+      const options: KyOptions = { method };
 
-    if (["POST", "PUT", "PATCH"].includes(method)) {
-      options.body = data.body;
-      options.headers = {
-        "Content-Type": "application/json",
+      if (["POST", "PUT", "PATCH"].includes(method)) {
+        options.body = data.body;
+        options.headers = {
+          "Content-Type": "application/json",
+        };
+      }
+
+      const response = await ky(endpoint, options);
+      const contentType = response.headers.get("content-type");
+      const responseData = contentType?.includes("application/json")
+        ? await response.json()
+        : await response.text();
+
+      const resPayload = {
+        httpResponse: {
+          status: response.status,
+          statusText: response.statusText,
+          data: responseData,
+        },
       };
-    }
 
-    const response = await ky(endpoint, options);
-    const contentType = response.headers.get("content-type");
-    const responseData = contentType?.includes("application/json")
-      ? await response.json()
-      : await response.text();
+      if (data.variableName) {
+        return {
+          ...context,
+          [data.variableName]: resPayload,
+        };
+      }
 
-    const resPayload = {
-      httpResponse: {
-        status: response.status,
-        statusText: response.statusText,
-        data: responseData,
-      },
-    };
-
-    if (data.variableName) {
+      // fallback to direct httpresponse
       return {
         ...context,
-        [data.variableName]: resPayload,
+        ...resPayload,
       };
-    }
+    });
 
-    // fallback to direct httpresponse
-    return {
-      ...context,
-      ...resPayload,
-    };
-  });
+    //   publish "success" state for http-request
+    await publish(
+      httpRequestChannel().status({
+        nodeId,
+        status: "success",
+      })
+    );
 
-  //   publish "success" state for http-request
-
-  return result;
+    return result;
+  } catch (error) {
+    await publish(
+      httpRequestChannel().status({
+        nodeId,
+        status: "error",
+      })
+    );
+    throw error;
+  }
 };
