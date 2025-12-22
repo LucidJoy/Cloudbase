@@ -25,43 +25,46 @@ export const httpRequestExecutor: NodeExecutor<HttpRequestData> = async ({
     })
   );
 
-  if (!data.endpoint) {
-    // publish "error" state
-    await publish(
-      httpRequestChannel().status({
-        nodeId,
-        status: "error",
-      })
-    );
-    throw new NonRetriableError("HTTP Request node: No endpoint configured");
-  }
-
-  if (!data.variableName) {
-    // publish "error" state
-    await publish(
-      httpRequestChannel().status({
-        nodeId,
-        status: "error",
-      })
-    );
-    throw new NonRetriableError(
-      "HTTP Request node: Variable name not configured"
-    );
-  }
-
-  if (!data.method) {
-    // publish "error" state
-    await publish(
-      httpRequestChannel().status({
-        nodeId,
-        status: "error",
-      })
-    );
-    throw new NonRetriableError("HTTP Request node: Method not configured");
-  }
   try {
     const result = await step.run("http-request", async () => {
-      const endpoint = data.endpoint!;
+      if (!data.endpoint) {
+        // publish "error" state
+        await publish(
+          httpRequestChannel().status({
+            nodeId,
+            status: "error",
+          })
+        );
+        throw new NonRetriableError(
+          "HTTP Request node: No endpoint configured"
+        );
+      }
+
+      if (!data.variableName) {
+        // publish "error" state
+        await publish(
+          httpRequestChannel().status({
+            nodeId,
+            status: "error",
+          })
+        );
+        throw new NonRetriableError(
+          "HTTP Request node: Variable name not configured"
+        );
+      }
+
+      if (!data.method) {
+        // publish "error" state
+        await publish(
+          httpRequestChannel().status({
+            nodeId,
+            status: "error",
+          })
+        );
+        throw new NonRetriableError("HTTP Request node: Method not configured");
+      }
+
+      const endpoint = data.endpoint;
       const method = data.method || "GET";
 
       const options: KyOptions = { method };
