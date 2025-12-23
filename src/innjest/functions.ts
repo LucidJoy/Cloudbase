@@ -12,6 +12,8 @@ import { httpRequestChannel } from "./channels/http-request";
 import { manualTriggerChannel } from "./channels/manual-trigger";
 import { googleFormTriggerChannel } from "./channels/google-form-trigger";
 import { stripeTriggerChannel } from "./channels/stripe-trigger";
+import { geminiChannel } from "./channels/gemini";
+import { openaiChannel } from "./channels/openai";
 
 const google = createGoogleGenerativeAI();
 
@@ -24,6 +26,8 @@ export const executeWorkflow = inngest.createFunction(
       manualTriggerChannel(),
       googleFormTriggerChannel(),
       stripeTriggerChannel(),
+      geminiChannel(),
+      openaiChannel(),
     ],
   },
   async ({ event, step, publish }) => {

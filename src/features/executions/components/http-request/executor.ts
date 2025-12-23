@@ -2,6 +2,7 @@ import type { NodeExecutor } from "@/features/executions/types";
 import { httpRequestChannel } from "@/innjest/channels/http-request";
 import { NonRetriableError } from "inngest";
 import ky, { type Options as KyOptions } from "ky";
+import Handlebars from "handlebars";
 
 type HttpRequestData = {
   variableName?: string;
@@ -64,13 +65,15 @@ export const httpRequestExecutor: NodeExecutor<HttpRequestData> = async ({
         throw new NonRetriableError("HTTP Request node: Method not configured");
       }
 
-      const endpoint = data.endpoint;
+      const endpoint = Handlebars.compile(data.endpoint)(context);
       const method = data.method || "GET";
 
       const options: KyOptions = { method };
 
       if (["POST", "PUT", "PATCH"].includes(method)) {
-        options.body = data.body;
+        options.body = data.body
+          ? Handlebars.compile(data.body)(context)
+          : undefined;
         options.headers = {
           "Content-Type": "application/json",
         };
