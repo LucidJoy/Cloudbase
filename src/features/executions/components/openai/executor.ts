@@ -5,9 +5,11 @@ import { NonRetriableError } from "inngest";
 import { openaiChannel } from "@/innjest/channels/openai";
 import { generateText } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
+import prisma from "@/lib/database";
 
 type OpenaiData = {
   variableName?: string;
+  credentialId?: string;
   systemPrompt?: string;
   userPrompt?: string;
 };
@@ -63,11 +65,20 @@ export const openaiExecutor: NodeExecutor<OpenaiData> = async ({
 
   const userPrompt = Handlebars.compile(data.userPrompt)(context);
 
-  // fetch cred that user selected
-  const credentialValue = process.env.OPENAI_API_KEY!;
+  const credential = await step.run("get-credential", () => {
+    return prisma.credential.findUnique({
+      where: {
+        id: data.credentialId,
+      },
+    });
+  });
+
+  if (!credential) {
+    throw new NonRetriableError("Gemini Node: Credential not found");
+  }
 
   const openai = createOpenAI({
-    apiKey: credentialValue,
+    apiKey: credential.value,
   });
 
   try {
