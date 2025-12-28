@@ -1,10 +1,38 @@
+import {
+  CredentialsContainer,
+  CredentialsError,
+  CredentialsList,
+  CredentialsLoading,
+} from "@/features/credentials/components/credentials";
+import { credentialParamsLoader } from "@/features/credentials/server/params-loader";
+import { prefetchCredentials } from "@/features/credentials/server/prefetch";
 import { requireAuth } from "@/lib/auth-utils";
-import React from "react";
+import { HydrateClient } from "@/trpc/server";
+import { SearchParams } from "nuqs";
+import { Suspense } from "react";
+import { ErrorBoundary } from "react-error-boundary";
 
-const Page = async () => {
+type Props = {
+  searhParams: Promise<SearchParams>;
+};
+
+const Page = async ({ searhParams }: Props) => {
   await requireAuth();
 
-  return <div>credentials</div>;
+  const params = await credentialParamsLoader(searhParams);
+  prefetchCredentials(params);
+
+  return (
+    <CredentialsContainer>
+      <HydrateClient>
+        <ErrorBoundary fallback={<CredentialsError />}>
+          <Suspense fallback={<CredentialsLoading />}>
+            <CredentialsList />
+          </Suspense>
+        </ErrorBoundary>
+      </HydrateClient>
+    </CredentialsContainer>
+  );
 };
 
 export default Page;

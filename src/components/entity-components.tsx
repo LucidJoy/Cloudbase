@@ -37,11 +37,9 @@ type EntityHeaderProps = {
   newButtonLabel: string;
   disabled?: boolean;
   isCreating?: boolean;
-} & (
-  | { onNew: () => void; newButtonHref?: never }
-  | { newButtonHref: string; onNew: never }
-  | { onNew?: never; newButtonHref?: never }
-);
+  onNew?: () => void;
+  newButtonHref?: string;
+};
 
 export const EntityHeader = ({
   title,
@@ -70,8 +68,10 @@ export const EntityHeader = ({
       )}
       {newButtonHref && !onNew && (
         <Link href={newButtonHref} prefetch>
-          <PlusIcon className="size-4" />
-          {newButtonLabel}
+          <Button disabled={disabled} size="sm">
+            <PlusIcon className="size-4" />
+            {newButtonLabel}
+          </Button>
         </Link>
       )}
     </div>

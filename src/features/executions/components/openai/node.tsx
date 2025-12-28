@@ -10,6 +10,7 @@ import { OPENAI_CHANNEL_NAME } from "@/innjest/channels/openai";
 
 type OpenaiNodeData = {
   variableName?: string;
+  credentialId?: string;
   systemPrompt?: string;
   userPrompt?: string;
 };
