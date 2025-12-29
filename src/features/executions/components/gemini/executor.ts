@@ -5,6 +5,7 @@ import { NonRetriableError } from "inngest";
 import { geminiChannel } from "@/innjest/channels/gemini";
 import { generateText } from "ai";
 import prisma from "@/lib/database";
+import { decrypt } from "@/lib/encryption";
 
 type GeminiData = {
   variableName?: string;
@@ -79,7 +80,7 @@ export const geminiExecutor: NodeExecutor<GeminiData> = async ({
   }
 
   const google = createGoogleGenerativeAI({
-    apiKey: credential.value,
+    apiKey: decrypt(credential.value),
   });
 
   try {
