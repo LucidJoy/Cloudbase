@@ -84,6 +84,22 @@ export function RegisterForm() {
     );
   };
 
+  const signInRoblox = async () => {
+    await authClient.signIn.social(
+      {
+        provider: "roblox",
+      },
+      {
+        onSuccess: () => {
+          router.push("/");
+        },
+        onError: () => {
+          toast.error("Something went wrong");
+        },
+      }
+    );
+  };
+
   const onSubmit = async (values: RegisterFormValues) => {
     await authClient.signUp.email(
       {
@@ -148,6 +164,22 @@ export function RegisterForm() {
                       alt="google"
                     />
                     Continue with Google
+                  </Button>
+
+                  <Button
+                    onClick={signInRoblox}
+                    variant="outline"
+                    className="w-full"
+                    type="button"
+                    disabled={isPending}
+                  >
+                    <Image
+                      src="/logos/roblox.svg"
+                      width={20}
+                      height={20}
+                      alt="roblox"
+                    />
+                    Continue with Roblox
                   </Button>
                 </div>
 
